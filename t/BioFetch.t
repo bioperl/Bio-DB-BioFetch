@@ -16,42 +16,31 @@ BEGIN {
 
 my $verbose = test_debug();
 
-my $dbwarn = "Warning: Couldn't connect to EMBL with Bio::DB::BioFetch!\n";
-
 my ($db,$db2,$seq,$seqio);
 
-SKIP :{
+{
     # get a single seq
     ok defined($db = Bio::DB::BioFetch->new(-verbose => $verbose));
     # get a RefSeq entry
     ok $db->db('refseqn');
-    eval {
-        $seq = $db->get_Seq_by_acc('NM_006732'); # RefSeq VERSION
-    };
-    skip($dbwarn, 4) if $@;
+    $seq = $db->get_Seq_by_acc('NM_006732'); # RefSeq VERSION
     isa_ok($seq, 'Bio::SeqI');
     is($seq->accession_number,'NM_006732');
     is($seq->accession_number,'NM_006732');
     is( $seq->length, 3776);
 }
 
-SKIP: {
+{
     # EMBL
     $db->db('embl');
-    eval {
-        $seq = $db->get_Seq_by_acc('J02231');
-    };
-    skip($dbwarn, 3) if $@;
+    $seq = $db->get_Seq_by_acc('J02231');
     isa_ok($seq, 'Bio::SeqI');
     is($seq->id, 'J02231');
     is($seq->length, 200);
 }
 
-SKIP: {
-    eval {
-        $seqio = $db->get_Stream_by_id(['AEE33958']);
-    };
-    skip($dbwarn, 3) if $@;
+{
+    $seqio = $db->get_Stream_by_id(['AEE33958']);
     undef $db; # testing to see if we can remove gb
     $seq = $seqio->next_seq();
     isa_ok($seqio, 'Bio::SeqIO');
@@ -63,34 +52,25 @@ SKIP: {
     #swissprot
     ok $db2 = Bio::DB::BioFetch->new(-db => 'swissprot');
     test_skip(-tests => 5, -requires_module => 'Data::Stag');
-    eval {
-        $seq = $db2->get_Seq_by_id('YNB3_YEAST');
-    };
-    skip($dbwarn, 5) if $@;
+    $seq = $db2->get_Seq_by_id('YNB3_YEAST');
     isa_ok($seq, 'Bio::SeqI');
     is($seq->length, 125);
     is($seq->division, 'YEAST');
     $db2->request_format('fasta');
-    eval {
-        $seq = $db2->get_Seq_by_acc('P43780');
-    };
-    skip($dbwarn, 2) if $@;
+    $seq = $db2->get_Seq_by_acc('P43780');
     isa_ok($seq, 'Bio::SeqI');
     is($seq->length,103);
 }
 
 $seq = $seqio = undef;
 
-SKIP: {
+{
     ok $db = Bio::DB::BioFetch->new(-retrievaltype => 'tempfile',
                                     -format        => 'fasta',
                                     -verbose       => $verbose
                                     );
     $db->db('embl');
-    eval {
-        $seqio = $db->get_Stream_by_id('J00522 AF303112 J02231');
-    };
-    skip($dbwarn, 7) if $@;
+    $seqio = $db->get_Stream_by_id('J00522 AF303112 J02231');
     my %seqs;
     # don't assume anything about the order of the sequences
     while ( my $s = $seqio->next_seq ) {
@@ -104,7 +84,7 @@ SKIP: {
     is($seqs{'J02231'},200);
 }
 
-SKIP: {
+{
     ok $db = Bio::DB::BioFetch->new(-db      => 'embl',
                                     -verbose => $verbose ? $verbose : -1);
 
@@ -113,22 +93,16 @@ SKIP: {
         $seq = $db->get_Seq_by_acc('NT_006732');
     };
     like($@, qr{contigs are whole chromosome files}, 'contig warning');
-    eval {
-        $seq = $db->get_Seq_by_acc('NM_006732');
-    };
-    skip($dbwarn, 2) if $@;
+    $seq = $db->get_Seq_by_acc('NM_006732');
     isa_ok($seq, 'Bio::SeqI');
     is($seq->length,3776);
 }
 
 # unisave
-SKIP: {
+{
     ok $db = Bio::DB::BioFetch->new(-db      => 'unisave',
                                     -verbose => $verbose ? $verbose : -1);
-    eval {
-        $seq = $db->get_Seq_by_acc('P14733');
-    };
-    skip($dbwarn, 4) if $@;
+    $seq = $db->get_Seq_by_acc('P14733');
     isa_ok($seq, 'Bio::SeqI');
     is($seq->display_id, 'LMNB1_MOUSE');
     is($seq->accession, 'P14733');
