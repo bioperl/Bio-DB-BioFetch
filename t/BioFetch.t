@@ -3,24 +3,20 @@
 
 use strict;
 
-BEGIN {
-    use Bio::Root::Test;
+use Test::More;
 
-    test_begin(-tests               => 36,
-               -requires_modules    => [qw(IO::String
-                                           LWP::UserAgent)],
-               -requires_networking => 1);
+use Test::RequiresInternet;
+use Test::Warn;
+use Test::Exception;
 
-    use_ok('Bio::DB::BioFetch');
-}
-
-my $verbose = test_debug();
+use Bio::DB::BioFetch;
 
 my ($db,$db2,$seq,$seqio);
 
+ok defined($db = Bio::DB::BioFetch->new());
+
 {
     # get a single seq
-    ok defined($db = Bio::DB::BioFetch->new(-verbose => $verbose));
     # get a RefSeq entry
     ok $db->db('refseqn');
     $seq = $db->get_Seq_by_acc('NM_006732'); # RefSeq VERSION
@@ -48,10 +44,10 @@ my ($db,$db2,$seq,$seqio);
     cmp_ok( $seq->length, '>=', 1);
 }
 
+ok $db2 = Bio::DB::BioFetch->new(-db => 'swissprot');
 SKIP: {
-    #swissprot
-    ok $db2 = Bio::DB::BioFetch->new(-db => 'swissprot');
-    test_skip(-tests => 5, -requires_module => 'Data::Stag');
+    eval { require Data::Stag };
+    skip "Data::Stag not installed", 5 if $@;
     $seq = $db2->get_Seq_by_id('YNB3_YEAST');
     isa_ok($seq, 'Bio::SeqI');
     is($seq->length, 125);
@@ -67,7 +63,6 @@ $seq = $seqio = undef;
 {
     ok $db = Bio::DB::BioFetch->new(-retrievaltype => 'tempfile',
                                     -format        => 'fasta',
-                                    -verbose       => $verbose
                                     );
     $db->db('embl');
     $seqio = $db->get_Stream_by_id('J00522 AF303112 J02231');
@@ -85,26 +80,29 @@ $seq = $seqio = undef;
 }
 
 {
-    ok $db = Bio::DB::BioFetch->new(-db      => 'embl',
-                                    -verbose => $verbose ? $verbose : -1);
+    ok $db = Bio::DB::BioFetch->new(-db => 'embl');
 
     # check contig warning (WebDBSeqI)
-    eval {
-        $seq = $db->get_Seq_by_acc('NT_006732');
-    };
-    like($@, qr{contigs are whole chromosome files}, 'contig warning');
-    $seq = $db->get_Seq_by_acc('NM_006732');
+    throws_ok (sub { $seq = $db->get_Seq_by_acc('NT_006732') },
+               qr/contigs are whole chromosome files/,
+               'contig warning');
+
+    warning_like (sub { $seq = $db->get_Seq_by_acc('NM_006732') },
+                  qr/RefSeq \(nucleotide\) entry\.  Redirecting the request\./,
+                  'Warn redirection from EMBL to RefSeq');
+
     isa_ok($seq, 'Bio::SeqI');
     is($seq->length,3776);
 }
 
 # unisave
 {
-    ok $db = Bio::DB::BioFetch->new(-db      => 'unisave',
-                                    -verbose => $verbose ? $verbose : -1);
+    ok $db = Bio::DB::BioFetch->new(-db => 'unisave');
     $seq = $db->get_Seq_by_acc('P14733');
     isa_ok($seq, 'Bio::SeqI');
     is($seq->display_id, 'LMNB1_MOUSE');
     is($seq->accession, 'P14733');
     is($seq->length, 588);
 }
+
+done_testing;
