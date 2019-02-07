@@ -14,6 +14,9 @@
 
 package Bio::DB::BioFetch;
 use strict;
+
+use Carp;
+
 use HTTP::Request::Common 'POST';
 
 =head1 NAME
@@ -128,6 +131,18 @@ BEGIN {
 	    genbank   => 'genbank',
 	    fasta     => 'fasta',
 	    namespace => 'RefSeq',
+	},
+	'refseqn' => {
+	    default   => 'genbank',
+	    genbank   => 'genbank',
+	    fasta     => 'fasta',
+	    namespace => 'refseqn',
+	},
+	'refseqp' => {
+	    default   => 'genbank',
+	    genbank   => 'genbank',
+	    fasta     => 'fasta',
+	    namespace => 'refseqp',
 	},
 	'swall' => {
 	    default   => 'swiss',
@@ -390,8 +405,14 @@ sub db {
   my $self = shift;
 
   if (@_) {
-
       my $db = lc shift;
+
+      ## This is a special case error message because 'refseq' was
+      ## once a valid database.  With time, remove this special error
+      ## handling.  See issue #1.
+      if ($db eq 'refseq') {
+          croak "'refseq' is an invalid db.  Try 'refseqn' or 'refseqn'";
+      }
       my $base = $self->url_base_address;
       $FORMATMAP{$db} or $self->throw("invalid db [$db] at [$base], must be one of [".
 				     join(' ',keys %FORMATMAP).  "]");
@@ -524,13 +545,15 @@ sub _check_id {
 		 "database distributions. Go to ftp://ftp.ncbi.nih.gov/genomes/.")
 	if $id =~ /NT_/;
 
-    # Asking for a RefSeq from EMBL/GenBank
-
-    if ($id =~ /N._/ &&  $self->db ne 'refseq') {
-	$self->warn("[$id] is not a normal sequence entry but a RefSeq entry.".
-		   " Redirecting the request.\n")
-	    if $self->verbose >= 0;
-	$self->db('RefSeq');
+    ## Asking for a RefSeq from EMBL/GenBank
+    if ($id =~ /^(AC|NC|NG|NM|NR|NS)_/ && $self->db ne 'refseqn') {
+        carp "[$id] is a RefSeq (nucleotide) entry.  Redirecting the request."
+            if $self->verbose >= 0;
+        $self->db('refseqn');
+    } elsif ($id =~ /^(AP|NP|XP|YP)_/ && $self->db ne 'refseqp') {
+        carp "[$id] is a RefSeq (protein) entry.  Redirecting the request."
+            if $self->verbose >= 0;
+        $self->db('refseqp');
     }
 }
 

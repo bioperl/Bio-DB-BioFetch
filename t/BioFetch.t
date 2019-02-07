@@ -24,7 +24,7 @@ SKIP :{
     # get a single seq
     ok defined($db = Bio::DB::BioFetch->new(-verbose => $verbose));
     # get a RefSeq entry
-    ok $db->db('refseq');
+    ok $db->db('refseqn');
     eval {
         $seq = $db->get_Seq_by_acc('NM_006732'); # RefSeq VERSION
     };
