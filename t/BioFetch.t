@@ -19,7 +19,7 @@ ok defined($db = Bio::DB::BioFetch->new());
     # get a single seq
     # get a RefSeq entry
     ok $db->db('refseqn');
-    $seq = $db->get_Seq_by_acc('NM_006732'); # RefSeq VERSION
+    $seq = $db->get_Seq_by_acc('NM_006732.2'); # RefSeq VERSION
     isa_ok($seq, 'Bio::SeqI');
     is($seq->accession_number,'NM_006732');
     is($seq->accession_number,'NM_006732');
@@ -87,7 +87,7 @@ $seq = $seqio = undef;
                qr/contigs are whole chromosome files/,
                'contig warning');
 
-    warning_like (sub { $seq = $db->get_Seq_by_acc('NM_006732') },
+    warning_like (sub { $seq = $db->get_Seq_by_acc('NM_006732.2') },
                   qr/RefSeq \(nucleotide\) entry\.  Redirecting the request\./,
                   'Warn redirection from EMBL to RefSeq');
 
