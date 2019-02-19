@@ -2,6 +2,8 @@ Summary of important user-visible changes for Bio-DB-BioFetch
 -------------------------------------------------------------
 
 {{$NEXT}}
+
+1.7.3     2019-02-19 13:14:08-05:00 America/Detroit
   * First release after split from bioperl-live.
 
   * The default baseaddress was changed to use the https protocol.
